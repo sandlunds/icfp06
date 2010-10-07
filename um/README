@@ -1,0 +1,7 @@
+Here are the UM implementations that I've made.
+
+The Java version is a translation of the one written in C#. Java
+doesn't have unsigned types, so things were done slightly differently in
+some cases.
+
+The Java version is slightly faster than the C# version using Mono.
