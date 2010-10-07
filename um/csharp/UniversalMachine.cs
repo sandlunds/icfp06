@@ -30,10 +30,8 @@ namespace UniversalMachine
 			BinaryReader reader = new BinaryReader (File.OpenRead (programPath));
 			
 			uint current;
-			try 
-			{
-				while (true) 
-				{
+			try {
+				while (true) {
 					byte b1 = reader.ReadByte ();
 					byte b2 = reader.ReadByte ();
 					byte b3 = reader.ReadByte ();
@@ -41,9 +39,7 @@ namespace UniversalMachine
 					current = (uint)((b1 << 24) | (b2 << 16) | (b3 << 8) | b4);
 					program.Add (current);
 				}
-			} 
-			catch (EndOfStreamException)
-			{
+			} catch (EndOfStreamException) {
 			}
 			
 			// Add the program as the first item - index 0.
