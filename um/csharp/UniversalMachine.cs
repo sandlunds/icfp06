@@ -30,8 +30,10 @@ namespace UniversalMachine
 			BinaryReader reader = new BinaryReader (File.OpenRead (programPath));
 			
 			uint current;
-			try {
-				while (true) {
+			try 
+			{
+				while (true) 
+				{
 					byte b1 = reader.ReadByte ();
 					byte b2 = reader.ReadByte ();
 					byte b3 = reader.ReadByte ();
@@ -39,8 +41,9 @@ namespace UniversalMachine
 					current = (uint)((b1 << 24) | (b2 << 16) | (b3 << 8) | b4);
 					program.Add (current);
 				}
-			} catch (EndOfStreamException) {
-				Console.WriteLine ("Program loaded.");
+			} 
+			catch (EndOfStreamException)
+			{
 			}
 			
 			// Add the program as the first item - index 0.
@@ -50,6 +53,8 @@ namespace UniversalMachine
 			this.output = output;
 		}
 
+		// This is the instruction format.
+		//
 		//                              A     C
 		//                              |     |
 		//                              vvv   vvv                    
@@ -62,38 +67,19 @@ namespace UniversalMachine
 		//
 		//      Figure 2. Standard Operators
 
-		private uint OpCode (uint instr)
-		{
-			return instr >> 28;
-		}
-
-		private uint RegA (uint instr)
-		{
-			return (instr >> 6) & 7;
-		}
-
-		private uint RegB (uint instr)
-		{
-			return (instr >> 3) & 7;
-		}
-
-		private uint RegC (uint instr)
-		{
-			return instr & 7;
-		}
-
-
 		public void Run ()
 		{
 			bool halt = false;
 			while (!halt) {
 				uint instr = allocatedMem[0][pc];
 				
-				uint a = RegA (instr);
-				uint b = RegB (instr);
-				uint c = RegC (instr);
+				// Extract the register "indexes" and the instruction.
+				uint a = (instr >> 6) & 7;
+				uint b = (instr >> 3) & 7;
+				uint c = instr & 7;
+				uint opCode = instr >> 28;
 				
-				switch (OpCode (instr)) {
+				switch (opCode) {
 				case 0:
 					// Conditional move.
 					// The register A receives the value in register B,
