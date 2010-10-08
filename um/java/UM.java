@@ -113,6 +113,7 @@ public class UM {
 			case 10:
 				// Output.
 				output.write(regs[c]);
+				output.flush();
 				break;
 			case 11:
 				// Input.
