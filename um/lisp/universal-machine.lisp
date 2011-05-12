@@ -1,0 +1,91 @@
+;;;; An implementation of the Universal Machine.
+;;;; Specification: http://www.boundvariable.org/um-spec.txt
+
+(in-package #:universal-machine)
+
+(defmacro wrap-around (n)
+  `(logand #xFFFFFFFF ,n))
+
+(defun load-program (filename)
+    (with-open-file (in filename :element-type '(unsigned-byte 8))
+      (when (/= 0 (mod (file-length in) 4))
+        (error "The file does not contain an even number of 32-bit words."))
+      ;; Read the program big endian style.
+      (let ((program (make-array (/ (file-length in) 4) :element-type '(unsigned-byte 32))))
+        (do ((index 0 (1+ index)))
+            ((>= index (length program)))
+          (let* ((b1 (read-byte in))
+                 (b2 (read-byte in))
+                 (b3 (read-byte in))
+                 (b4 (read-byte in)))
+            (setf (elt program index)
+                  (logior (ash b1 24)
+                          (ash b2 16)
+                          (ash b3 8)
+                          b4))))
+        program)))
+
+(defun main-loop (allocated-mem regs free-indices pc)
+  (declare (optimize (speed 3) (safety 0) (debug 0)))
+  (declare (fixnum pc)
+	   ((simple-array (unsigned-byte 32)) regs)
+	   ((simple-array (simple-array (unsigned-byte 32) 1) 1) allocated-mem)
+	   ((array fixnum) free-indices))
+  (macrolet ((mem (index) `(aref allocated-mem ,index))
+	     (reg (index) `(aref regs ,index)))
+    (loop 
+       (let* ((instr (aref (aref allocated-mem 0) pc))
+	      (a (logand (ash instr -6) 7))
+	      (b (logand (ash instr -3) 7))
+	      (c (logand instr 7))
+	      (opcode (ash instr -28)))
+	 (declare (fixnum instr))
+	 (case opcode
+	   ;; conditional move
+	   (0 (when (/= 0 (reg c))
+		(setf (reg a) (reg b))))
+	   ;; array index
+	   (1 (setf (reg a)
+		    (aref (mem (reg b)) (reg c))))
+	   ;; array amendment
+	   (2 (setf (aref (mem (reg a)) (reg b))
+		    (reg c)))
+	   ;; add
+	   (3 (setf (reg a)
+		    (wrap-around (+ (reg b) (reg c)))))
+	   ;; mul
+	   (4 (setf (reg a)
+		    (wrap-around (* (reg b) (reg c)))))
+	   ;; div
+	   (5 (setf (reg a)
+		    (floor (reg b) (reg c))))
+	   ;; not-and
+	   (6 (setf (reg a)
+		    (wrap-around (lognot (logand (reg b) (reg c))))))
+	   (7 (return))
+	   (8 (let ((new-array (make-array (reg c) :element-type '(unsigned-byte 32))))
+		(if (> (length free-indices) 0)
+		    (let ((index (vector-pop free-indices)))
+		      (setf (mem index) new-array)
+		      (setf (reg b) index))
+		    (error "No free indices."))))
+	   (9 (vector-push (reg c) free-indices))
+	   (10 (princ (code-char (reg c))))
+	   (11 (setf (reg c) (char-code (read-char))))
+	   (12 (progn (when (/= 0 (reg b))
+			(setf (mem 0) 
+			      (copy-seq (mem (reg b)))))
+		      (setf pc (1- (reg c)))))
+	   (13 (let ((a (logand (ash instr -25) 7)))
+		 (setf (reg a)
+		       (logand instr #x1FFFFFF))))
+	   (otherwise (error "Unknown opcode encountered.")))
+	 (incf pc)))))
+
+(defun start (filename)
+  (let ((regs (make-array 8 :element-type '(unsigned-byte 32)))
+        (allocated-mem (make-array 50000))
+        (free-indices (make-array 50000 :fill-pointer 0)))
+    (loop for i from 0 to 49999 do (vector-push i free-indices))
+    (setf (elt allocated-mem 0) (load-program filename))
+    (main-loop allocated-mem regs free-indices 0)))
