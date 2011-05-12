@@ -5,3 +5,6 @@ doesn't have unsigned types, so things were done slightly differently in
 some cases.
 
 The Java version is slightly faster than the C# version using Mono.
+
+I also have version written in Common Lisp that when compiled with
+SBCL is a tiny bit faster than the Java version (on my machine).
