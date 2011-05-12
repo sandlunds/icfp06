@@ -1,5 +1,6 @@
 ;;;; package.lisp
 
 (defpackage #:universal-machine
-  (:use #:cl))
+  (:use #:cl)
+  (:export #:start))
 
