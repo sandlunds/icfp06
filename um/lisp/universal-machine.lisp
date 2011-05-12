@@ -68,7 +68,12 @@
 		      (setf (mem index) new-array)
 		      (setf (reg b) index)
 		      (setf free-indices (cdr free-indices)))
-		    (error "No free indices."))))
+		    (let ((index (length allocated-mem)))
+		      (setf allocated-mem (array-extend allocated-mem))
+		      (setf (aref allocated-mem index) new-array)
+		      (setf (reg b) index)
+		      (setf free-indices (loop for i from (1+ index) to (1- (length allocated-mem))
+					      collect i))))))
 	   (9 (setf free-indices (cons (reg c) free-indices)))
 	   (10 (princ (code-char (reg c))))
 	   (11 (setf (reg c) (char-code (read-char))))
@@ -82,9 +87,17 @@
 	   (otherwise (error "Unknown opcode encountered.")))
 	 (incf pc)))))
 
+(defun array-extend (array)
+  "Creates a copy of ARRAY that is twice as long."
+  (let ((new-array (make-array (* 2 (length array)))))
+    (loop for x across array and i upfrom 0 
+       do (setf (aref new-array i) x))
+    (format t "DEBUG: length of array: ~a~%" (length new-array))
+    new-array))
+
 (defun start (filename)
   (let ((regs (make-array 8 :element-type '(unsigned-byte 32)))
-        (allocated-mem (make-array 50000))
-        (free-indices (loop for i from 1 to 50000 collect i)))
+        (allocated-mem (make-array 1000))
+        (free-indices (loop for i from 1 to 999 collect i)))
     (setf (elt allocated-mem 0) (load-program filename))
     (main-loop allocated-mem regs free-indices 0)))
