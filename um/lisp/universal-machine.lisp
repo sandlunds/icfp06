@@ -64,9 +64,9 @@
            ;; not-and
            (6 (setf (reg a)
                     (wrap-around (lognot (logand (reg b) (reg c))))))
-	   ;; halt
+           ;; halt
            (7 (return))
-	   ;; allocation
+           ;; allocation
            (8 (let ((new-array (make-array (reg c) :element-type '(unsigned-byte 32))))
                 (if (not (null free-indices))
                     (let ((index (car free-indices)))
@@ -78,19 +78,19 @@
                       (setf (aref allocated-mem index) new-array)
                       (setf (reg b) index)
                       (setf free-indices (loop for i from (1+ index) to (1- (length allocated-mem))
-					    collect i))))))
-	   ;; abandon (deallocation)
+                                            collect i))))))
+           ;; abandon (deallocation)
            (9 (setf free-indices (cons (reg c) free-indices)))
-	   ;; output
+           ;; output
            (10 (princ (code-char (reg c))))
-	   ;; input
+           ;; input
            (11 (setf (reg c) (char-code (read-char))))
-	   ;; load program
+           ;; load program
            (12 (progn (when (/= 0 (reg b))
                         (setf (mem 0)
                               (copy-seq (mem (reg b)))))
                       (setf pc (1- (reg c)))))
-	   ;; orthography
+           ;; orthography
            (13 (let ((a (logand (ash instr -25) 7)))
                  (setf (reg a)
                        (logand instr #x1FFFFFF))))
