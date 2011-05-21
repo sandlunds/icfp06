@@ -1,6 +1,10 @@
 ;;;; An implementation of the Universal Machine.
 ;;;; Specification: http://www.boundvariable.org/um-spec.txt
 
+(defpackage #:universal-machine
+  (:use #:cl)
+  (:export #:start))
+
 (in-package #:universal-machine)
 
 ;; We are dealing with 32-bit unsigned integers.
