@@ -13,24 +13,13 @@
 (defmacro wrap-around (n)
    `(logand #xFFFFFFFF ,n))
 
-(defun load-program (filename)
-  (with-open-file (in filename :element-type '(unsigned-byte 8))
-    (when (/= 0 (mod (file-length in) 4))
-      (error "The file does not contain an even number of 32-bit words."))
-    ;; Read the program big endian style.
-    (let ((program (make-array (/ (file-length in) 4) :element-type 'uint32)))
-      (do ((index 0 (1+ index)))
-          ((>= index (length program)))
-        (let* ((b1 (read-byte in))
-               (b2 (read-byte in))
-               (b3 (read-byte in))
-               (b4 (read-byte in)))
-          (setf (elt program index)
-                (logior (ash b1 24)
-                        (ash b2 16)
-                        (ash b3 8)
-                        b4))))
-      program)))
+(defun array-extend (array)
+  "Create a copy of ARRAY that is twice as long."
+  (let ((new-array (make-array (* 2 (length array)))))
+    (loop for x across array and i upfrom 0 
+       do (setf (aref new-array i) x))
+    (format t "DEBUG: length of array: ~a~%" (length new-array))
+    new-array))
 
 (defun main-loop (allocated-mem regs free-indices pc)
   (declare (optimize (speed 3) (safety 0)))
@@ -103,13 +92,24 @@
              (otherwise (error "Unknown opcode encountered.")))
            (incf pc))))))
 
-(defun array-extend (array)
-  "Create a copy of ARRAY that is twice as long."
-  (let ((new-array (make-array (* 2 (length array)))))
-    (loop for x across array and i upfrom 0 
-       do (setf (aref new-array i) x))
-    (format t "DEBUG: length of array: ~a~%" (length new-array))
-    new-array))
+(defun load-program (filename)
+  (with-open-file (in filename :element-type '(unsigned-byte 8))
+    (when (/= 0 (mod (file-length in) 4))
+      (error "The file does not contain an even number of 32-bit words."))
+    ;; Read the program big endian style.
+    (let ((program (make-array (/ (file-length in) 4) :element-type 'uint32)))
+      (do ((index 0 (1+ index)))
+          ((>= index (length program)))
+        (let* ((b1 (read-byte in))
+               (b2 (read-byte in))
+               (b3 (read-byte in))
+               (b4 (read-byte in)))
+          (setf (elt program index)
+                (logior (ash b1 24)
+                        (ash b2 16)
+                        (ash b3 8)
+                        b4))))
+      program)))
 
 (defun start (filename)
   (let ((regs (make-array 8 :element-type 'uint32))
