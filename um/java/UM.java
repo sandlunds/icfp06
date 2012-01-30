@@ -23,7 +23,7 @@ public class UM {
 		// Find the size of the program file.
 		File f = new File(programPath);
 		if (f.length() % 4 != 0) {
-			throw new IOException("File is corrupt - the number of bytes is not divisable by 4");
+			throw new IOException("File is corrupt - the number of bytes is not a multiple of 4");
 		}
 		
 		FileInputStream in = new FileInputStream(programPath);
@@ -150,7 +150,6 @@ public class UM {
 			UM um = new UM(args[0]);
 			um.run();
 		} catch (IOException e) {
-			System.out.println("Error reading " + args[0]);
 			System.out.println(e);
 		}
 	}

@@ -1,0 +1,2 @@
+$ scalac UniversalMachine.scala
+$ scala UniversalMachine
